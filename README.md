@@ -27,12 +27,12 @@ cd app
 docker compose up --build
 ```
 
-**Development (interactive, no rebuild on code change):**
+**Development (hot-reload, no rebuild on code change):**
 ```bash
 cd app
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up --build -d
 ```
-Then edit code on your machine; the app in the container hot-reloads. The first `--build` installs deps in the image; after that you only need to save files. SQLite DB is in the `app-data` volume.
+Then edit code on your machine; the app in the container hot-reloads. Request logs appear in the terminal. First `--build` installs deps; after that, saving files is enough. SQLite DB is in `./data` (bind mount).
 
 App: [http://localhost:3000](http://localhost:3000).
 

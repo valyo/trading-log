@@ -1,6 +1,6 @@
-# Interactive dev: code on host is mounted; Next.js dev server hot-reloads. No image rebuild needed.
-# Run: docker compose -f docker-compose.dev.yml up --build
-# Then edit code locally; changes apply in the container.
+# Dev: code mounted, hot-reload, no rebuild. Logs in terminal.
+# Run from app/:  docker compose -f docker-compose.dev.yml up --build -d
+# Edit code locally; changes apply in the browser. DB in ./data (bind mount).
 
 services:
   app:
@@ -10,12 +10,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Mount app code so edits on host are visible in the container
       - .:/app
-      # Keep container's node_modules (don't overwrite with host)
       - app-node-modules:/app/node_modules
-      # Persist SQLite DB between restarts
-      - app-data:/app/data
+      - ./data:/app/data
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
@@ -24,4 +21,3 @@ services:
 
 volumes:
   app-node-modules:
-  app-data:
