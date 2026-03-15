@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { trades } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { deleteTrade, recalculateResultat } from "@/app/actions";
+import { StockFilter } from "./StockFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,27 @@ function formatNum(value: number | null | undefined): string {
 export default async function TradesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ inserted?: string; skipped?: string; deleted?: string; recalculated?: string }>;
+  searchParams: Promise<{
+    inserted?: string;
+    skipped?: string;
+    deleted?: string;
+    recalculated?: string;
+    stock?: string;
+  }>;
 }) {
-  const { inserted, skipped, deleted, recalculated } = await searchParams;
-  const list = await db.select().from(trades).orderBy(desc(trades.datum), desc(trades.id));
+  const { inserted, skipped, deleted, recalculated, stock } = await searchParams;
+  const instruments = await db
+    .selectDistinct({ vardepapper: trades.vardepapper })
+    .from(trades)
+    .orderBy(trades.vardepapper);
+  const filterStock = stock?.trim() || undefined;
+  const list = filterStock
+    ? await db
+        .select()
+        .from(trades)
+        .where(eq(trades.vardepapper, filterStock))
+        .orderBy(desc(trades.datum), desc(trades.id))
+    : await db.select().from(trades).orderBy(desc(trades.datum), desc(trades.id));
 
   const hasImportResult = inserted !== undefined || skipped !== undefined;
   const skippedCount = Number(skipped ?? 0);
@@ -56,7 +74,8 @@ export default async function TradesPage({
       )}
       <div className="flex justify-between items-center flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Trade log</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <StockFilter instruments={instruments} currentStock={filterStock ?? ""} />
           <form action={recalculateResultat} className="inline">
             <button
               type="submit"
