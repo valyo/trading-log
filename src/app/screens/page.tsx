@@ -2,10 +2,16 @@ import { db } from "@/lib/db";
 import { screeningSnapshots } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import Link from "next/link";
+import { deleteScreeningSnapshot } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ScreensPage() {
+export default async function ScreensPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string }>;
+}) {
+  const { deleted } = await searchParams;
   const list = await db
     .select()
     .from(screeningSnapshots)
@@ -13,6 +19,11 @@ export default async function ScreensPage() {
 
   return (
     <div className="space-y-6">
+      {deleted === "1" && (
+        <p className="rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/30 px-4 py-2 text-sm text-green-800 dark:text-green-200">
+          Screen deleted.
+        </p>
+      )}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Screening snapshots</h1>
         <Link
@@ -30,12 +41,13 @@ export default async function ScreensPage() {
               <th className="text-left p-3">Name</th>
               <th className="text-left p-3">Created</th>
               <th className="text-left p-3"></th>
+              <th className="w-24 p-3"></th>
             </tr>
           </thead>
           <tbody>
             {list.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-6 text-center text-[var(--muted)]">
+                <td colSpan={5} className="p-6 text-center text-[var(--muted)]">
                   No screens. Import Borsdata CSV.
                 </td>
               </tr>
@@ -51,6 +63,18 @@ export default async function ScreensPage() {
                     <Link href={`/screens/${s.id}`} className="text-[var(--primary)] hover:underline">
                       View
                     </Link>
+                  </td>
+                  <td className="p-3">
+                    <form action={deleteScreeningSnapshot} className="inline">
+                      <input type="hidden" name="id" value={s.id} />
+                      <button
+                        type="submit"
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm"
+                        title="Delete this screen"
+                      >
+                        Delete
+                      </button>
+                    </form>
                   </td>
                 </tr>
               ))

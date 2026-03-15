@@ -131,3 +131,13 @@ export async function submitScreeningImport(formData: FormData) {
   await importScreeningSnapshot(text, snapshotDate, name);
   redirect("/screens?imported=1");
 }
+
+export async function deleteScreeningSnapshot(formData: FormData) {
+  const id = formData.get("id");
+  if (id == null) return;
+  const numId = Number(id);
+  if (!Number.isInteger(numId)) return;
+  await db.delete(screeningRows).where(eq(screeningRows.snapshotId, numId));
+  await db.delete(screeningSnapshots).where(eq(screeningSnapshots.id, numId));
+  redirect("/screens?deleted=1");
+}
