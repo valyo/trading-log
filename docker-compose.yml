@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Bind mount: DB lives in your project folder and survives Rancher/Docker resets
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
