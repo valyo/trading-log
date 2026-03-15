@@ -73,22 +73,22 @@ export default async function TradesPage({
           </Link>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+      <div className="max-h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-[var(--border)]">
         <table className="w-full text-sm">
           <thead className="bg-slate-100 dark:bg-slate-800">
             <tr>
-              <th className="text-left p-3">Datum</th>
-              <th className="text-left p-3">Konto</th>
-              <th className="text-left p-3">Typ</th>
-              <th className="text-left p-3">Värdepapper</th>
-              <th className="text-right p-3">Antal</th>
-              <th className="text-right p-3">Kurs</th>
-              <th className="text-right p-3">Belopp</th>
-              <th className="text-left p-3">Valuta</th>
-              <th className="text-right p-3">Courtage</th>
-              <th className="text-right p-3">Resultat</th>
-              <th className="text-left p-3">Source</th>
-              <th className="w-20 p-3"></th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Datum</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Konto</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Typ</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Värdepapper</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-right shadow-[0_1px_0_0_var(--border)]">Antal</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-right shadow-[0_1px_0_0_var(--border)]">Kurs</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-right shadow-[0_1px_0_0_var(--border)]">Belopp</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Valuta</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-right shadow-[0_1px_0_0_var(--border)]">Courtage</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-right shadow-[0_1px_0_0_var(--border)]">Resultat</th>
+              <th className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 p-3 text-left shadow-[0_1px_0_0_var(--border)]">Source</th>
+              <th className="sticky top-0 z-10 w-20 bg-slate-100 dark:bg-slate-800 p-3 shadow-[0_1px_0_0_var(--border)]"></th>
             </tr>
           </thead>
           <tbody>

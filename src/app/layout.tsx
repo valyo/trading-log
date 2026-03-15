@@ -13,7 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen antialiased">
-        <header className="border-b border-[var(--border)] bg-white/80 dark:bg-slate-900/80 backdrop-blur">
+        <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-slate-900/80">
           <nav className="mx-auto max-w-6xl px-4 py-3 flex gap-6">
             <Link href="/" className="font-semibold text-[var(--primary)]">
               Trend Log
