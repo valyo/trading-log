@@ -34,6 +34,16 @@ function tradeKind(typ: string): "buy" | "sell" | "dividend" {
   return "buy"; // fallback
 }
 
+/** Sort by date, then buys before sells on same day (so same-day round-trips match). */
+function sortChronological(a: TradeForResultat, b: TradeForResultat): number {
+  const d = a.datum.localeCompare(b.datum);
+  if (d !== 0) return d;
+  const order = (t: TradeForResultat) =>
+    tradeKind(t.typAvTransaktion) === "buy" ? 0 : tradeKind(t.typAvTransaktion) === "sell" ? 1 : 2;
+  const o = order(a) - order(b);
+  return o !== 0 ? o : a.id - b.id;
+}
+
 /**
  * For a list of trades (same instrument, sorted by datum then id), compute Resultat
  * for sells and dividends that have null Resultat. Returns { id, resultat }[].
@@ -55,7 +65,7 @@ function computeForInstrument(sortedTrades: TradeForResultat[]): { id: number; r
     }
 
     if (kind === "dividend") {
-      if (t.resultat == null && t.belopp > 0) {
+      if (t.belopp != null) {
         updates.push({ id: t.id, resultat: round2(t.belopp) });
       }
       continue;
@@ -77,10 +87,8 @@ function computeForInstrument(sortedTrades: TradeForResultat[]): { id: number; r
         if (lot.quantity <= 0) lots.shift();
       }
 
-      if (t.resultat == null) {
-        const resultat = round2(proceeds - costSold);
-        updates.push({ id: t.id, resultat });
-      }
+      const resultat = round2(proceeds - costSold);
+      updates.push({ id: t.id, resultat });
     }
   }
 
@@ -101,10 +109,7 @@ export function computeMissingResultat(tradesList: TradeForResultat[]): { id: nu
 
   const allUpdates: { id: number; resultat: number }[] = [];
   byInstrument.forEach((list) => {
-    const sorted = [...list].sort((a, b) => {
-      const d = a.datum.localeCompare(b.datum);
-      return d !== 0 ? d : a.id - b.id;
-    });
+    const sorted = [...list].sort(sortChronological);
     allUpdates.push(...computeForInstrument(sorted));
   });
   return allUpdates;

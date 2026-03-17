@@ -1,5 +1,6 @@
+/// <reference path="../../jsx.d.ts" />
 import { db } from "@/lib/db";
-import { trades } from "@/lib/db/schema";
+import { trades, type Trade } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { deleteTrade, recalculateResultat } from "@/app/actions";
@@ -10,6 +11,13 @@ export const dynamic = "force-dynamic";
 function formatNum(value: number | null | undefined): string {
   if (value == null) return "—";
   return Number(value).toFixed(2);
+}
+
+const AVANZA_SCREENER = "https://www.avanza.se/aktier/handla.html/screener";
+
+function avanzaScreenerUrl(instrument: string): string {
+  const nq = encodeURIComponent(instrument.trim());
+  return nq ? `${AVANZA_SCREENER}?s=oneDayChangePercent.desc&o=0&nq=${nq}` : AVANZA_SCREENER;
 }
 
 export default async function TradesPage({
@@ -118,12 +126,21 @@ export default async function TradesPage({
                 </td>
               </tr>
             ) : (
-              list.map((t) => (
+              list.map((t: Trade) => (
                 <tr key={t.id} className="border-t border-[var(--border)] hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="p-3">{t.datum}</td>
                   <td className="p-3">{t.konto}</td>
                   <td className="p-3">{t.typAvTransaktion}</td>
-                  <td className="p-3">{t.vardepapper}</td>
+                  <td className="p-3">
+                    <a
+                      href={avanzaScreenerUrl(t.vardepapper)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--primary)] hover:underline"
+                    >
+                      {t.vardepapper}
+                    </a>
+                  </td>
                   <td className="p-3 text-right">{t.antal}</td>
                   <td className="p-3 text-right">{formatNum(t.kurs)}</td>
                   <td className="p-3 text-right">{formatNum(t.belopp)}</td>
