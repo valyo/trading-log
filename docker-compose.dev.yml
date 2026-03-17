@@ -1,6 +1,7 @@
 # Dev: code mounted, hot-reload, no rebuild. Logs in terminal.
 # Run from app/:  docker compose -f docker-compose.dev.yml up --build -d
 # Edit code locally; changes apply in the browser. DB in ./data (bind mount).
+# Important: run from the app/ directory so the volume mount provides src/app at /app/src/app.
 
 services:
   app:
@@ -12,7 +13,10 @@ services:
     volumes:
       - .:/app
       - app-node-modules:/app/node_modules
+      - app-next:/app/.next
       - ./data:/app/data
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
@@ -21,3 +25,4 @@ services:
 
 volumes:
   app-node-modules:
+  app-next:

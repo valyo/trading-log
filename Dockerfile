@@ -6,7 +6,8 @@ RUN npm ci || npm install
 EXPOSE 3000
 ENV NODE_ENV=development
 ENV HOSTNAME="0.0.0.0"
-CMD ["npm", "run", "dev"]
+# Install deps at startup so the node_modules volume is populated (it overrides the image's node_modules)
+CMD ["sh", "-c", "npm install && npm run dev"]
 
 # Build stage: install deps and build (better-sqlite3 needs native compile)
 FROM node:20-bookworm AS builder

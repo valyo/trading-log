@@ -57,6 +57,7 @@ type InstrumentRow = {
   gainPct: number | null;
   lastSellDatum: string;
   lastSellId: number;
+  totalCourtage: number;
 };
 
 type OpenPositionRow = {
@@ -112,8 +113,8 @@ function buildOpenPositionRows(tradesList: Trade[]): OpenPositionRow[] {
   return rows.sort((a, b) => b.totalCost - a.totalCost);
 }
 
-/** FIFO lot with buy date for dividend allocation. */
-type LotWithDate = { qty: number; cost: number; date: string };
+/** FIFO lot with buy date and courtage for dividend allocation and courtage rollup. */
+type LotWithDate = { qty: number; cost: number; date: string; courtage: number };
 
 /**
  * One row per closed round-trip (buy → dividends → sell). For each sell we compute
@@ -131,29 +132,34 @@ function buildInstrumentRows(tradesList: Trade[]): InstrumentRow[] {
   const rows: InstrumentRow[] = [];
   for (const [vardepapper, list] of byVardepapper) {
     const sorted = [...list].sort(sortTradesChronological);
-    const dividends: { date: string; belopp: number }[] = [];
+    const dividends: { date: string; belopp: number; courtage: number }[] = [];
     const lots: LotWithDate[] = [];
 
     for (const t of sorted) {
       if (isDividend(t) && t.belopp != null) {
-        dividends.push({ date: t.datum, belopp: t.belopp });
+        dividends.push({ date: t.datum, belopp: t.belopp, courtage: t.courtage ?? 0 });
         continue;
       }
       const qty = t.antal ?? 0;
       if (isCostBuy(t) && t.belopp != null && t.belopp < 0 && qty > 0) {
-        lots.push({ qty, cost: -t.belopp, date: t.datum });
+        lots.push({ qty, cost: -t.belopp, date: t.datum, courtage: t.courtage ?? 0 });
         continue;
       }
       if (isSell(t) && qty < 0) {
         let toSell = -qty;
         let costSold = 0;
         let earliestBuyDate = "";
+        let courtageFromLots = 0;
         while (toSell >= 1e-6 && lots.length > 0) {
           const lot = lots[0];
           const take = Math.min(toSell, lot.qty);
           const costPerShare = lot.qty >= 1e-6 ? lot.cost / lot.qty : 0;
           costSold += costPerShare * take;
           if (earliestBuyDate === "" || lot.date < earliestBuyDate) earliestBuyDate = lot.date;
+          if (take >= 1e-6) {
+            courtageFromLots += lot.courtage;
+            lot.courtage = 0; // avoid double-count if we hit this lot again in a later iteration
+          }
           lot.cost -= costPerShare * take;
           lot.qty -= take;
           toSell -= take;
@@ -162,15 +168,18 @@ function buildInstrumentRows(tradesList: Trade[]): InstrumentRow[] {
         const proceeds = t.belopp ?? 0;
         // Dividends in holding period (after earliest buy of sold shares, on or before sell date)
         let dividendsInPeriod = 0;
+        let courtageFromDividends = 0;
         for (let i = dividends.length - 1; i >= 0; i--) {
           const d = dividends[i];
           if (d.date > earliestBuyDate && d.date <= t.datum) {
             dividendsInPeriod += d.belopp;
+            courtageFromDividends += d.courtage;
             dividends.splice(i, 1);
           }
         }
         const totalResult = proceeds + dividendsInPeriod - costSold;
         const gainPct = costSold >= 1e-9 ? (totalResult / costSold) * 100 : null;
+        const totalCourtage = (t.courtage ?? 0) + courtageFromLots + courtageFromDividends;
         rows.push({
           vardepapper,
           totalResult,
@@ -178,6 +187,7 @@ function buildInstrumentRows(tradesList: Trade[]): InstrumentRow[] {
           gainPct,
           lastSellDatum: t.datum,
           lastSellId: t.id,
+          totalCourtage,
         });
       }
     }
@@ -336,6 +346,10 @@ export default async function PerformancePage({
 
       <section>
         <h2 className="font-semibold text-lg mb-4">Closed positions (one row per stock, splits and dividends included)</h2>
+        <p className="text-sm text-[var(--muted)] mb-2">
+          {sortedRows.length} closed position{sortedRows.length !== 1 ? "s" : ""}.
+          Total courtage paid: {formatNum(sortedRows.reduce((s, r) => s + r.totalCourtage, 0))}.
+        </p>
         <div className="max-h-[28rem] overflow-auto rounded-lg border border-[var(--border)]">
           <table className="w-full text-sm">
             <thead className="bg-slate-100 dark:bg-slate-800">

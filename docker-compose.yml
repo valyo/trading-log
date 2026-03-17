@@ -6,5 +6,7 @@ services:
     volumes:
       # Bind mount: DB lives in your project folder and survives Rancher/Docker resets
       - ./data:/app/data
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
