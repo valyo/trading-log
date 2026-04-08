@@ -36,13 +36,23 @@ const BROKER_HEADERS = [
 function mapBrokerRow(raw: Record<string, string>): BrokerRow | null {
   const datum = raw["Datum"]?.trim();
   if (!datum) return null;
+  const typAvTransaktion = (raw["Typ av transaktion"] ?? "").trim();
+  const typLower = typAvTransaktion.toLowerCase();
   const antal = parseSwedishNumber(raw["Antal"] ?? "");
-  const belopp = parseSwedishNumber(raw["Belopp"] ?? "");
-  if (antal === null || belopp === null) return null;
+  if (antal === null) return null;
+  // Avanza "Split nytt värdepapper" often has empty Belopp/Kurs — still a valid row (0 cash).
+  const beloppParsed = parseSwedishNumber(raw["Belopp"] ?? "");
+  const belopp =
+    beloppParsed !== null
+      ? beloppParsed
+      : typLower.includes("split") && typLower.includes("nytt")
+        ? 0
+        : null;
+  if (belopp === null) return null;
   return {
     datum,
     konto: (raw["Konto"] ?? "").trim(),
-    typAvTransaktion: (raw["Typ av transaktion"] ?? "").trim(),
+    typAvTransaktion,
     vardepapper: (raw["Värdepapper/beskrivning"] ?? "").trim(),
     antal,
     kurs: parseSwedishNumber(raw["Kurs"] ?? "") ?? null,

@@ -1,8 +1,10 @@
 /**
  * Compute missing Resultat (realized P&L) for trades using FIFO cost basis.
  * Sells: Resultat = Belopp (proceeds) - cost of shares sold (FIFO from buys).
- * Dividends / utdelning: Resultat = Belopp (income).
+ * Dividend pool (utdelning, källskatt, preliminär skatt on dividend, etc.): Resultat = Belopp.
  */
+
+import { isDividendPoolType } from "./dividendPool";
 
 export type TradeForResultat = {
   id: number;
@@ -25,21 +27,25 @@ function instrumentKey(t: TradeForResultat): string {
   return `${t.vardepapper}|${t.isin ?? ""}`;
 }
 
-/** Normalize transaction type to buy/sell/dividend */
-function tradeKind(typ: string): "buy" | "sell" | "dividend" {
+function tradeKind(typ: string): "buy" | "sell" | "dividend" | "other" {
   const u = typ.trim().toLowerCase();
+  if (isDividendPoolType(typ)) return "dividend";
   if (u === "köp" || u === "buy") return "buy";
   if (u === "sälj" || u === "sell") return "sell";
-  if (u.includes("utdelning") || u.includes("dividend") || u.includes("divident")) return "dividend";
-  return "buy"; // fallback
+  return "other";
 }
 
 /** Sort by date, then buys before sells on same day (so same-day round-trips match). */
 function sortChronological(a: TradeForResultat, b: TradeForResultat): number {
   const d = a.datum.localeCompare(b.datum);
   if (d !== 0) return d;
-  const order = (t: TradeForResultat) =>
-    tradeKind(t.typAvTransaktion) === "buy" ? 0 : tradeKind(t.typAvTransaktion) === "sell" ? 1 : 2;
+  const order = (t: TradeForResultat) => {
+    const k = tradeKind(t.typAvTransaktion);
+    if (k === "buy") return 0;
+    if (k === "sell") return 1;
+    if (k === "dividend") return 2;
+    return 3;
+  };
   const o = order(a) - order(b);
   return o !== 0 ? o : a.id - b.id;
 }
@@ -55,18 +61,20 @@ function computeForInstrument(sortedTrades: TradeForResultat[]): { id: number; r
   for (const t of sortedTrades) {
     const kind = tradeKind(t.typAvTransaktion);
 
+    if (kind === "dividend") {
+      updates.push({ id: t.id, resultat: round2(t.belopp) });
+      continue;
+    }
+
+    if (kind === "other") {
+      continue;
+    }
+
     if (kind === "buy") {
       const qty = t.antal;
       const costTotal = -t.belopp; // belopp is negative for buy
       if (qty > 0 && costTotal > 0) {
         lots.push({ quantity: qty, costTotal });
-      }
-      continue;
-    }
-
-    if (kind === "dividend") {
-      if (t.belopp != null) {
-        updates.push({ id: t.id, resultat: round2(t.belopp) });
       }
       continue;
     }
