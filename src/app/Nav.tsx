@@ -29,6 +29,9 @@ export function Nav() {
             <Link href="/performance" className="text-[var(--muted)] hover:text-[var(--foreground)]">
               Performance
             </Link>
+            <Link href="/stretch" className="text-[var(--muted)] hover:text-[var(--foreground)]">
+              Price study
+            </Link>
           </>
         )}
       </div>

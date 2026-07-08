@@ -12,14 +12,19 @@ if (!fs.existsSync(dataDir)) {
 const dbPath = path.join(dataDir, "trades.db");
 const sqlite = new Database(dbPath);
 
-// Run initial migration if tables don't exist
-const tables = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='trades'").get();
-if (!tables) {
-  const migrationPath = path.join(process.cwd(), "drizzle", "0000_initial.sql");
+function runMigrationIfNeeded(filename: string, tableName: string) {
+  const exists = sqlite
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
+    .get(tableName);
+  if (exists) return;
+  const migrationPath = path.join(process.cwd(), "drizzle", filename);
   if (fs.existsSync(migrationPath)) {
     const sql = fs.readFileSync(migrationPath, "utf8");
     sqlite.exec(sql);
   }
 }
+
+runMigrationIfNeeded("0000_initial.sql", "trades");
+runMigrationIfNeeded("0001_price_series.sql", "price_series");
 
 export const db = drizzle(sqlite, { schema });

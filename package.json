@@ -20,7 +20,8 @@
     "better-sqlite3": "^9.2.0",
     "papaparse": "^5.4.0",
     "recharts": "^2.10.0",
-    "date-fns": "^3.0.0"
+    "date-fns": "^3.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",

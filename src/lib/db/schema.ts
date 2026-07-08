@@ -64,3 +64,30 @@ export type ScreeningSnapshot = typeof screeningSnapshots.$inferSelect;
 export type NewScreeningSnapshot = typeof screeningSnapshots.$inferInsert;
 export type ScreeningRow = typeof screeningRows.$inferSelect;
 export type NewScreeningRow = typeof screeningRows.$inferInsert;
+
+/** Daily OHLCV imported from Excel (e.g. CHEF-Cheffelo.xlsx) for MA / pullback studies. */
+export const priceSeries = sqliteTable("price_series", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slug: text("slug").notNull().unique(),
+  label: text("label").notNull(),
+  sourceFile: text("source_file"),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const priceBars = sqliteTable("price_bars", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  seriesId: integer("series_id")
+    .notNull()
+    .references(() => priceSeries.id, { onDelete: "cascade" }),
+  datum: text("datum").notNull(),
+  open: real("open"),
+  high: real("high"),
+  low: real("low"),
+  close: real("close").notNull(),
+  volume: real("volume"),
+});
+
+export type PriceSeries = typeof priceSeries.$inferSelect;
+export type NewPriceSeries = typeof priceSeries.$inferInsert;
+export type PriceBar = typeof priceBars.$inferSelect;
+export type NewPriceBar = typeof priceBars.$inferInsert;

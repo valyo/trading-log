@@ -2,6 +2,7 @@
 # Run from app/:  docker compose -f docker-compose.dev.yml up --build -d
 # Edit code locally; changes apply in the browser. DB in ./data (bind mount).
 # Important: run from the app/ directory so the volume mount provides src/app at /app/src/app.
+# node_modules: installed inside the container (volume app-node-modules); see README → Docker.
 
 services:
   app:
