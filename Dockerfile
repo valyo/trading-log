@@ -1,4 +1,4 @@
-# Dev stage: deps only; source is mounted at runtime. Use with docker-compose.dev.yml.
+# Dev stage: deps only; source is mounted at runtime. Use with compose.dev.yml.
 FROM node:20-bookworm AS dev
 WORKDIR /app
 COPY package.json package-lock.json* ./
