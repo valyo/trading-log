@@ -64,18 +64,19 @@ function positionGroupKey(t: Trade, isinToStockName: Map<string, string>): strin
   return `name:${t.vardepapper}`;
 }
 
-/** Sort trades by date, then buys before sells on same day (so same-day round-trips match). */
+/** Sort trades by date, then buy → dividend → sell on same day (so same-day round-trips match). */
 function sortTradesChronological(a: Trade, b: Trade): number {
   const d = a.datum.localeCompare(b.datum);
   if (d !== 0) return d;
   const order = (t: Trade) => {
     if (isCostBuy(t)) return 0;
-    if (isSell(t)) return 1;
+    if (isDividend(t)) return 1;
+    if (isSell(t)) return 2;
     if (isSplitNewInstrument(t)) {
       const q = t.antal ?? 0;
-      return q < 0 ? 2 : 3; // old ISIN out before new ISIN in
+      return q < 0 ? 3 : 4; // old ISIN out before new ISIN in
     }
-    return 4;
+    return 5;
   };
   const o = order(a) - order(b);
   return o !== 0 ? o : a.id - b.id;
